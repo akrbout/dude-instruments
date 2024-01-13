@@ -30,7 +30,7 @@ jobs:
       - name: Run Docker container
         run: |
           if [ "${{ matrix.app }}" == "onetime-spider" ]; then
-            docker run -d --name ${{ matrix.app }} -p 12000:80 ${{ matrix.app }}:latest
+            docker run -d --name ${{ matrix.app }} -p 80:12000 ${{ matrix.app }}:latest
           elif [ "${{ matrix.app }}" == "simple-avatars" ]; then
-            docker run -d --name ${{ matrix.app }} -p 12001:80 ${{ matrix.app }}:latest
+            docker run -d --name ${{ matrix.app }} -p 80:12001 ${{ matrix.app }}:latest
           fi
