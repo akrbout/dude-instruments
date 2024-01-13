@@ -14,4 +14,4 @@ RUN poetry config virtualenvs.create false
 RUN poetry install --no-dev
 COPY . /app
 
-CMD ["uvicorn", "src.main:app", "--port", "7644"]
+CMD ["uvicorn", "main:app", "--port", "7645"]
