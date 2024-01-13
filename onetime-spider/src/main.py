@@ -71,7 +71,7 @@ async def health_check() -> dict[str, int]:
     description="""Метод позволяет собрать все совпадающие объекты, описанные в схеме. 
     Если требуется собрать несколько объектов одного формата, 
     то для такого объекта необходимо указание селектора '_parent_object'.""",
-    name="crawl_page",
+    name="Crawl Page",
     response_model=SpiderOutput,
     responses={
         status.HTTP_400_BAD_REQUEST: {
