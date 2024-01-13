@@ -43,23 +43,22 @@ jobs:
 
       - name: Generate NGINX Configuration
         run: |
-          echo "http {" > nginx.conf
-          echo "  server {" >> nginx.conf
-          echo "      listen 80;" >> nginx.conf
-          echo "      server_name onetime-spider.akrbout.ru;" >> nginx.conf
-          echo "      location / {" >> nginx.conf
-          echo "          proxy_pass http://localhost:12001;" >> nginx.conf
-          echo "      }" >> nginx.conf
-          echo "  }" >> nginx.conf
-          echo "" >> nginx.conf
-          echo "  server {" > nginx.conf
-          echo "      listen 80;" >> nginx.conf
-          echo "      server_name simple-avatars.akrbout.ru;" >> nginx.conf
-          echo "      location / {" >> nginx.conf
-          echo "          proxy_pass http://localhost:12002;" >> nginx.conf
-          echo "      }" >> nginx.conf
-          echo "  }" >> nginx.conf
+          echo "server {" > nginx.conf
+          echo "    listen 80;" >> nginx.conf
+          echo "    server_name onetime-spider.akrbout.ru;" >> nginx.conf
+          echo "    location / {" >> nginx.conf
+          echo "        proxy_pass http://localhost:12001;" >> nginx.conf
+          echo "    }" >> nginx.conf
           echo "}" >> nginx.conf
+#          echo "" >> nginx.conf
+#          echo "  server {" > nginx.conf
+#          echo "      listen 80;" >> nginx.conf
+#          echo "      server_name simple-avatars.akrbout.ru;" >> nginx.conf
+#          echo "      location / {" >> nginx.conf
+#          echo "          proxy_pass http://localhost:12002;" >> nginx.conf
+#          echo "      }" >> nginx.conf
+#          echo "  }" >> nginx.conf
+#          echo "}" >> nginx.conf
 
       - name: Run NGINX container
         run: |
