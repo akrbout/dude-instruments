@@ -5,7 +5,15 @@ on:
     branches: [ main, dev ]
 
 jobs:
+  stop-and-remove-containers:
+    runs-on: self-hosted
+    steps:
+      - name: Stop and remove all containers in my-network
+        run: |
+          docker network inspect my-network --format='{{json .Containers}}' | jq -r 'keys[]' | xargs -I {} docker rm -f {}
+
   setup-network:
+    needs: stop-and-remove-containers
     runs-on: self-hosted
     steps:
       - name: Check if Docker network exists
