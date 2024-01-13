@@ -30,7 +30,37 @@ jobs:
       - name: Run Docker container
         run: |
           if [ "${{ matrix.app }}" == "onetime-spider" ]; then
-            docker run -d --name ${{ matrix.app }} -p 80:12000 ${{ matrix.app }}:latest
+            docker run -d --name ${{ matrix.app }} -p 12001:80 ${{ matrix.app }}:latest
           elif [ "${{ matrix.app }}" == "simple-avatars" ]; then
-            docker run -d --name ${{ matrix.app }} -p 80:12001 ${{ matrix.app }}:latest
+            docker run -d --name ${{ matrix.app }} -p 12002:80 ${{ matrix.app }}:latest
           fi
+
+  setup-nginx:
+    needs: build-and-run
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Generate NGINX Configuration
+        run: |
+          echo "http {" > nginx.conf
+          echo "  server {" >> nginx.conf
+          echo "      listen 80;" >> nginx.conf
+          echo "      server_name onetime-spider.akrbout.ru;" >> nginx.conf
+          echo "      location / {" >> nginx.conf
+          echo "          proxy_pass http://localhost:12001;" >> nginx.conf
+          echo "      }" >> nginx.conf
+          echo "  }" >> nginx.conf
+          echo "" >> nginx.conf
+          echo "  server {" > nginx.conf
+          echo "      listen 80;" >> nginx.conf
+          echo "      server_name simple-avatars.akrbout.ru;" >> nginx.conf
+          echo "      location / {" >> nginx.conf
+          echo "          proxy_pass http://localhost:12002;" >> nginx.conf
+          echo "      }" >> nginx.conf
+          echo "  }" >> nginx.conf
+          echo "}" >> nginx.conf
+
+      - name: Run NGINX container
+        run: |
+          docker run -d -p 80:80 --name nginx --mount type=bind,source=$(pwd)/nginx.conf,target=/etc/nginx/nginx.conf nginx:latest
