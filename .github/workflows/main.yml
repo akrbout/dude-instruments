@@ -33,7 +33,6 @@ jobs:
         run: docker network rm my-network
 
       - name: Create a new Docker network
-        if: steps.check-network.outputs.EXISTS == 'false'
         run: docker network create my-network
 
   build-and-run:
