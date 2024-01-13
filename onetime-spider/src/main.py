@@ -10,7 +10,6 @@ app = FastAPI(
     title="One-time spider",
     description="Сервис по единоразовому парсингу объектов страницы",
     version="1.1.0",
-    root_path="/api",
 )
 
 app.add_middleware(

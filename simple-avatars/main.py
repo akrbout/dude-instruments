@@ -13,7 +13,6 @@ app = FastAPI(
     title="Avatar Generation Service",
     description="Сервис по генерации рандомных аватаров",
     version="1.0.0",
-    root_path="/api",
 )
 
 app.add_middleware(
