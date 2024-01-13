@@ -8,10 +8,23 @@ jobs:
   setup-network:
     runs-on: self-hosted
     steps:
+      - name: Check if Docker network exists
+        id: check-network
+        run: |
+          if docker network ls | grep -q my-network; then
+            echo "Network exists"
+            echo "::set-output name=EXISTS::true"
+          else
+            echo "Network does not exist"
+            echo "::set-output name=EXISTS::false"
+          fi
+
       - name: Remove old Docker network (if exists)
-        run: docker network rm my-network || true
+        if: steps.check-network.outputs.EXISTS == 'true'
+        run: docker network rm my-network
 
       - name: Create a new Docker network
+        if: steps.check-network.outputs.EXISTS == 'false'
         run: docker network create my-network
 
   build-and-run:
