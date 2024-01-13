@@ -6,7 +6,7 @@ on:
 
 jobs:
   build-and-run:
-    runs-on: [ self-hosted, linux, x64 ]
+    runs-on: self-hosted
     strategy:
       matrix:
         app: [ 'onetime-spider', 'simple-avatars' ]
