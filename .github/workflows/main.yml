@@ -41,6 +41,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Stop and remove previous Nginx container
+        run: |
+          docker stop nginx || true
+          docker rm nginx || true
+
       - name: Generate NGINX Configuration
         run: |
           echo "server {" > nginx.conf
