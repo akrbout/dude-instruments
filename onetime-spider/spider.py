@@ -44,10 +44,6 @@ class OneTimeSpider:
             res.append(obj)
         self.results = res
         return True
-        # for field in results_obj:
-        #     for y, item in enumerate(results_obj[field]):
-        #         self.results.insert(y, {field: item})
-        # return True
 
     def parse_target(self, page_content: str) -> None:
         self._global_selector = Selector(text=page_content)
