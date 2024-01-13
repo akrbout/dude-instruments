@@ -53,8 +53,8 @@ jobs:
           echo "  server {" >> nginx.conf
           echo "      listen 80;" >> nginx.conf
           echo "      server_name onetime-spider.akrbout.ru;" >> nginx.conf
-          echo "      location / {" >> nginx.conf
-          echo "          proxy_pass http://localhost:12001/;" >> nginx.conf
+          echo "      location /docs {" >> nginx.conf
+          echo "          proxy_pass http://ontetime-spider:12001;" >> nginx.conf
           echo "      }" >> nginx.conf
           echo "   }" >> nginx.conf
           echo "}" >> nginx.conf
