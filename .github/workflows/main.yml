@@ -1,0 +1,30 @@
+name: prod
+run-name: ${{ github.actor }} is creating new masterpice
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-run:
+    runs-on: [ self-hosted, linux, x64 ]
+    strategy:
+      matrix:
+        app: [ 'onetime-spider', 'simple-avatars' ]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Build Docker image for ${{ matrix.app }}
+        run: |
+          cd ${{ matrix.app }}
+          docker build -t ${{ matrix.app }}:latest .
+
+      - name: Stop and remove previous Docker container
+        run: |
+          docker stop ${{ matrix.app }} || true
+          docker rm ${{ matrix.app }} || true
+
+      - name: Run Docker container
+        run: |
+          docker run -d --name ${{ matrix.app }} ${{ matrix.app }}:latest
