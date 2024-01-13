@@ -48,7 +48,8 @@ jobs:
 
       - name: Generate NGINX Configuration
         run: |
-          echo "http {" > nginx.conf
+          echo "events {}" > nginx.conf
+          echo "http {" >> nginx.conf
           echo "  server {" >> nginx.conf
           echo "      listen 80;" >> nginx.conf
           echo "      server_name onetime-spider.akrbout.ru;" >> nginx.conf
