@@ -8,9 +8,10 @@ jobs:
   stop-and-remove-containers:
     runs-on: self-hosted
     steps:
-      - name: Stop and remove all containers in my-network
+      - name: Stop and remove all containers using my-network
         run: |
-          docker network inspect my-network --format='{{json .Containers}}' | jq -r 'keys[]' | xargs -I {} docker rm -f {}
+          docker network inspect my-network -f '{{range .Containers}}{{.Name}} {{end}}' | xargs -r -n1 docker stop
+          docker network inspect my-network -f '{{range .Containers}}{{.Name}} {{end}}' | xargs -r -n1 docker rm
 
   setup-network:
     needs: stop-and-remove-containers
@@ -56,7 +57,7 @@ jobs:
           cd ${{ matrix.app }}
           docker build -t ${{ matrix.app }}:latest .
 
-      - name: Stop and remove previous Docker container
+      - name: Stop and remove previous Docker container (if started)
         run: |
           docker stop ${{ matrix.app }} || true
           docker rm ${{ matrix.app }} || true
