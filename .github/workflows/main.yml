@@ -5,15 +5,28 @@ on:
     branches: [ main, dev ]
 
 jobs:
+  setup-network:
+    runs-on: self-hosted
+    steps:
+      - name: Remove old Docker network (if exists)
+        run: docker network rm my-network || true
+
+      - name: Create a new Docker network
+        run: docker network create my-network
+
   build-and-run:
+    needs: setup-network
     runs-on: self-hosted
     strategy:
       matrix:
-        app: [ 'onetime-spider', 'simple-avatars' ]
+        include:
+          - app: 'onetime-spider'
+            port: '12001'
+          - app: 'simple-avatars'
+            port: '12002'
     steps:
       - uses: actions/checkout@v4
-      - name: Echo Something
-        run: echo Hello world!
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 
@@ -29,11 +42,7 @@ jobs:
 
       - name: Run Docker container
         run: |
-          if [ "${{ matrix.app }}" == "onetime-spider" ]; then
-            docker run -d --name ${{ matrix.app }} -p 12001:80 ${{ matrix.app }}:latest
-          elif [ "${{ matrix.app }}" == "simple-avatars" ]; then
-            docker run -d --name ${{ matrix.app }} -p 12002:80 ${{ matrix.app }}:latest
-          fi
+          docker run -d --name ${{ matrix.app }} --network my-network -p ${{ matrix.port }}:80 ${{ matrix.app }}:latest
 
   setup-nginx:
     needs: build-and-run
@@ -56,18 +65,16 @@ jobs:
           echo "      location /docs {" >> nginx.conf
           echo "          proxy_pass http://ontetime-spider:12001;" >> nginx.conf
           echo "      }" >> nginx.conf
-          echo "   }" >> nginx.conf
+          echo "  }" >> nginx.conf
+          echo "  server {" >> nginx.conf
+          echo "      listen 80;" >> nginx.conf
+          echo "      server_name simple-avatars.akrbout.ru;" >> nginx.conf
+          echo "      location /docs {" >> nginx.conf
+          echo "          proxy_pass http://simple-avatars:12002;" >> nginx.conf
+          echo "      }" >> nginx.conf
+          echo "  }" >> nginx.conf
           echo "}" >> nginx.conf
-#          echo "" >> nginx.conf
-#          echo "  server {" > nginx.conf
-#          echo "      listen 80;" >> nginx.conf
-#          echo "      server_name simple-avatars.akrbout.ru;" >> nginx.conf
-#          echo "      location / {" >> nginx.conf
-#          echo "          proxy_pass http://localhost:12002;" >> nginx.conf
-#          echo "      }" >> nginx.conf
-#          echo "  }" >> nginx.conf
-#          echo "}" >> nginx.conf
 
       - name: Run NGINX container
         run: |
-          docker run -d -p 80:80 --name nginx --mount type=bind,source=$(pwd)/nginx.conf,target=/etc/nginx/nginx.conf nginx:latest
+          docker run -d -p 80:80 --name nginx --network my-network --mount type=bind,source=$(pwd)/nginx.conf,target=/etc/nginx/nginx.conf nginx:latest
