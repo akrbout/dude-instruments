@@ -11,7 +11,7 @@ jobs:
       matrix:
         app: [ 'onetime-spider', 'simple-avatars' ]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 
@@ -27,4 +27,8 @@ jobs:
 
       - name: Run Docker container
         run: |
-          docker run -d --name ${{ matrix.app }} ${{ matrix.app }}:latest
+          if [ "${{ matrix.app }}" == "onetime-spider" ]; then
+            docker run -d --name ${{ matrix.app }} -p 12000:80 ${{ matrix.app }}:latest
+          elif [ "${{ matrix.app }}" == "simple-avatars" ]; then
+            docker run -d --name ${{ matrix.app }} -p 12001:80 ${{ matrix.app }}:latest
+          fi
