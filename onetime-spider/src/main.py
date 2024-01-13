@@ -1,7 +1,7 @@
-import spider
-import client
+import src.spider as spider
+import src.client as client
 from pydantic import BaseModel, Field, AnyUrl
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 
@@ -71,7 +71,7 @@ async def health_check() -> dict[str, int]:
     description="""Метод позволяет собрать все совпадающие объекты, описанные в схеме. 
     Если требуется собрать несколько объектов одного формата, 
     то для такого объекта необходимо указание селектора '_parent_object'.""",
-    name="Скраулить страницу по заданному шаблону",
+    name="crawl_page",
     response_model=SpiderOutput,
     responses={
         status.HTTP_400_BAD_REQUEST: {
