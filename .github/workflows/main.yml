@@ -54,7 +54,7 @@ jobs:
           echo "      listen 80;" >> nginx.conf
           echo "      server_name onetime-spider.akrbout.ru;" >> nginx.conf
           echo "      location / {" >> nginx.conf
-          echo "          proxy_pass http://0.0.0.0:12001;" >> nginx.conf
+          echo "          proxy_pass http://host.docker.internal:12001;" >> nginx.conf
           echo "      }" >> nginx.conf
           echo "   }" >> nginx.conf
           echo "}" >> nginx.conf
