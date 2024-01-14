@@ -1,17 +1,54 @@
 name: prod
 run-name: ${{ github.actor }} is creating new masterpice
+
 on:
   push:
     branches: [ main ]
 
 jobs:
+  stop-and-remove-containers:
+    runs-on: self-hosted
+    steps:
+      - name: Stop and remove all containers using my-network
+        run: |
+          docker network inspect my-network -f '{{range .Containers}}{{.Name}} {{end}}' | xargs -r -n1 docker stop
+          docker network inspect my-network -f '{{range .Containers}}{{.Name}} {{end}}' | xargs -r -n1 docker rm
+
+  setup-network:
+    needs: stop-and-remove-containers
+    runs-on: self-hosted
+    steps:
+      - name: Check if Docker network exists
+        id: check-network
+        run: |
+          if docker network ls | grep -q my-network; then
+            echo "Network exists"
+            echo "::set-output name=EXISTS::true"
+          else
+            echo "Network does not exist"
+            echo "::set-output name=EXISTS::false"
+          fi
+
+      - name: Remove old Docker network (if exists)
+        if: steps.check-network.outputs.EXISTS == 'true'
+        run: docker network rm my-network
+
+      - name: Create a new Docker network
+        run: docker network create my-network
+
   build-and-run:
+    needs: setup-network
     runs-on: self-hosted
     strategy:
       matrix:
-        app: [ 'onetime-spider', 'simple-avatars' ]
+        include:
+          - app: 'onetime-spider'
+            port: '12001'
+          - app: 'simple-avatars'
+            port: '12002'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 
@@ -20,15 +57,46 @@ jobs:
           cd ${{ matrix.app }}
           docker build -t ${{ matrix.app }}:latest .
 
-      - name: Stop and remove previous Docker container
+      - name: Stop and remove previous Docker container (if started)
         run: |
           docker stop ${{ matrix.app }} || true
           docker rm ${{ matrix.app }} || true
 
       - name: Run Docker container
         run: |
-          if [ "${{ matrix.app }}" == "onetime-spider" ]; then
-            docker run -d --name ${{ matrix.app }} -p 12000:80 ${{ matrix.app }}:latest
-          elif [ "${{ matrix.app }}" == "simple-avatars" ]; then
-            docker run -d --name ${{ matrix.app }} -p 12001:80 ${{ matrix.app }}:latest
-          fi
+          docker run -d --name ${{ matrix.app }} --network my-network -p ${{ matrix.port }}:80 ${{ matrix.app }}:latest
+
+  setup-nginx:
+    needs: build-and-run
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Stop and remove previous Nginx container
+        run: |
+          docker stop nginx || true
+          docker rm nginx || true
+
+      - name: Generate NGINX Configuration
+        run: |
+          echo "events {}" > nginx.conf
+          echo "http {" >> nginx.conf
+          echo "  server {" >> nginx.conf
+          echo "      listen 80;" >> nginx.conf
+          echo "      server_name onetime-spider.akrbout.ru;" >> nginx.conf
+          echo "      location / {" >> nginx.conf
+          echo "          proxy_pass http://onetime-spider;" >> nginx.conf
+          echo "      }" >> nginx.conf
+          echo "  }" >> nginx.conf
+          echo "  server {" >> nginx.conf
+          echo "      listen 80;" >> nginx.conf
+          echo "      server_name simple-avatars.akrbout.ru;" >> nginx.conf
+          echo "      location / {" >> nginx.conf
+          echo "          proxy_pass http://simple-avatars;" >> nginx.conf
+          echo "      }" >> nginx.conf
+          echo "  }" >> nginx.conf
+          echo "}" >> nginx.conf
+
+      - name: Run NGINX container
+        run: |
+          docker run -d -p 80:80 --name nginx --network my-network --mount type=bind,source=$(pwd)/nginx.conf,target=/etc/nginx/nginx.conf nginx:latest
