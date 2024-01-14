@@ -1,8 +1,9 @@
 name: prod
 run-name: ${{ github.actor }} is creating new masterpice
+
 on:
   push:
-    branches: [ main, dev ]
+    branches: [ main ]
 
 jobs:
   stop-and-remove-containers:
