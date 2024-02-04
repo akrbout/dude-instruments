@@ -61,7 +61,7 @@ jobs:
     needs: prepare-build
     runs-on: self-hosted
     strategy:
-      matrix: ${{fromJson(needs.prepare.outputs.matrix)}}
+      matrix: ${{fromJson(needs.prepare-build.outputs.matrix)}}
     steps:
       - uses: actions/checkout@v4
 
