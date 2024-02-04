@@ -37,6 +37,7 @@ jobs:
         run: docker network create my-network
 
   prepare-build:
+    needs: setup-network
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
