@@ -3,7 +3,7 @@ run-name: ${{ github.actor }} is creating new masterpice
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, dev ]
 
 jobs:
   stop-and-remove-containers:
@@ -36,16 +36,31 @@ jobs:
       - name: Create a new Docker network
         run: docker network create my-network
 
+  prepare-build:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v2
+      - id: set-matrix
+        run: |
+          exclude_folders=(".github" ".idea")
+          apps=($(ls -d */ | grep -vE "^(${exclude_folders// /|})/"))
+          matrix="{\"include\":["
+          port=12000
+          for app in "${apps[@]}"; do
+            app=${app%/} # Убрать слеш на конце
+            matrix+="{\"app\":\"$app\", \"port\":\"$port\"},"
+            ((port++))
+          done
+          matrix=${matrix%,} # Убрать последнюю запятую
+          matrix+="]}"
+          echo "::set-output name=matrix::$matrix"
   build-and-run:
-    needs: setup-network
+    needs: prepare-build
     runs-on: self-hosted
     strategy:
-      matrix:
-        include:
-          - app: 'onetime-spider'
-            port: '12001'
-          - app: 'simple-avatars'
-            port: '12002'
+      matrix: ${{fromJson(needs.prepare.outputs.matrix)}}
     steps:
       - uses: actions/checkout@v4
 
